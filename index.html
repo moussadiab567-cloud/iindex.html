@@ -5,15 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Control Hub</title>
   
-  <!-- Full iOS & Android Native Standalone Web App Tags -->
+  <!-- Standalone iOS Web App Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-touch-fullscreen" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Control Hub" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="theme-color" content="#000000" />
   
-  <link rel="manifest" href="manifest.json" />
+  <!-- Inline Web Manifest (No separate manifest.json needed) -->
+  <link rel="manifest" href='data:application/manifest+json,{"name":"Control Hub","short_name":"Control Hub","start_url":".","display":"standalone","background_color":"#000000","theme_color":"#000000"}' />
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" />
 
   <!-- Tailwind CSS -->
@@ -37,7 +38,7 @@
   </script>
 
   <style>
-    /* iOS Safe Area & Native Feel Fixes */
+    /* iOS Safe Area & Native UI Fixes */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
@@ -48,7 +49,6 @@
       background-color: #000000;
     }
 
-    /* Support iOS Safe Areas for Notch / Dynamic Island & Home Bar */
     header {
       padding-top: max(3rem, env(safe-area-inset-top));
     }
@@ -277,12 +277,8 @@
   </nav>
 
   <script>
-    // Register Service Worker for Standalone App Support
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(err => console.log('ServiceWorker error: ', err));
-      });
-    }
+    // Force Links to Stay in Standalone App Mode on iOS
+    (function(a,b,c){if(c in b&&b[c]){var d=a.location,e=/mobi/i;if(g in a)return;a.addEventListener("click",function(a){var b=a.target;while(!/html|body/i.test(b.nodeName)&&!e.test(b.href)&&b.nodeName!="A")b=b.parentNode;if("href"in b&&(b.href.indexOf("http")||~b.href.indexOf(d.host))){a.preventDefault();d.href=b.href}},!1)}})(document,window.navigator,"standalone");
 
     // App State Management
     let selectedMoodValue = "🧘 Calm & In Control";
