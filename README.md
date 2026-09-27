@@ -2,128 +2,264 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Control Hub</title>
   
-  <!-- PWA & iOS Meta Tags -->
-  <link rel="manifest" href="manifest.json" />
+  <!-- iOS Native App PWA Meta Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="ControlHub" />
+  <meta name="apple-mobile-web-app-title" content="Control Hub" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" />
-  <meta name="theme-color" content="#0f172a" />
 
-  <!-- Tailwind CSS CDN -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
-      theme: { extend: { colors: { darkbg: '#0f172a', cardbg: '#1e293b' } } }
+      theme: {
+        extend: {
+          colors: {
+            appBg: '#000000',
+            cardBg: '#121214',
+            cardBorder: '#232328',
+            accentRed: '#ff3b30',
+            accentGreen: '#34c759',
+            accentBlue: '#0a84ff',
+          }
+        }
+      }
     }
   </script>
-</head>
-<body class="bg-darkbg text-slate-100 min-h-screen pb-12 font-sans antialiased">
 
-  <!-- Header & Streak -->
-  <header class="p-5 bg-cardbg border-b border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-lg">
+  <style>
+    /* Hide scrollbars for seamless native app feel */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    body { -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-appBg text-white min-h-screen font-sans antialiased pb-28 select-none">
+
+  <!-- Header -->
+  <header class="pt-12 px-5 pb-3 bg-black border-b border-cardBorder/50 flex justify-between items-center sticky top-0 z-20 backdrop-blur-md bg-black/80">
     <div>
-      <h1 class="text-xl font-bold text-blue-400">Control Hub</h1>
-      <p class="text-xs text-slate-400">Mind, Body & Focus</p>
+      <h1 class="text-3xl font-black tracking-tight text-white">Control Hub</h1>
+      <p id="currentDateSub" class="text-xs font-medium text-zinc-400 mt-0.5">Loading date...</p>
     </div>
-    <div class="flex items-center space-x-2 bg-slate-800 px-3 py-1.5 rounded-full border border-orange-500/30">
-      <span class="text-lg">🔥</span>
-      <span id="streakCount" class="font-bold text-orange-400 text-sm">0 Days</span>
+    <div class="flex items-center space-x-3">
+      <div class="flex items-center space-x-1.5 bg-[#1c1c1e] px-3 py-1.5 rounded-full border border-orange-500/30">
+        <span class="text-sm">🔥</span>
+        <span id="streakCount" class="font-bold text-orange-400 text-xs">0 Days</span>
+      </div>
+      <div class="w-8 h-8 rounded-full bg-zinc-800 text-zinc-300 font-bold flex items-center justify-center text-xs border border-zinc-700">
+        M
+      </div>
     </div>
   </header>
 
-  <main class="max-w-md mx-auto p-4 space-y-6">
+  <!-- Main View Container -->
+  <main class="max-w-md mx-auto px-4 pt-4">
 
-    <!-- Section 1: Daily Check-In & Mental Focus -->
-    <section class="bg-cardbg p-5 rounded-2xl border border-slate-700/60 shadow">
-      <h2 class="text-lg font-semibold mb-3 flex items-center gap-2 text-indigo-400">
-        🧠 Self-Control & Mood Log
-      </h2>
+    <!-- TAB 1: TODAY / SCHEDULE -->
+    <section id="tab-today" class="space-y-5">
+      <!-- Date Scroll Bar -->
+      <div id="dateStrip" class="flex gap-2 overflow-x-auto no-scrollbar py-1"></div>
+
+      <!-- Overview Header -->
+      <div class="flex justify-between items-center pt-2">
+        <div>
+          <h2 id="selectedDayTitle" class="text-xl font-bold text-white">Today</h2>
+          <p class="text-xs text-zinc-500 font-medium tracking-wider uppercase">Overview & Daily Focus</p>
+        </div>
+      </div>
+
+      <!-- Completion Banner -->
+      <div id="completionCard" class="hidden bg-emerald-950/20 border border-emerald-500/40 p-4 rounded-2xl flex items-center gap-3">
+        <span class="text-2xl">🎉</span>
+        <div>
+          <h3 class="text-sm font-bold text-emerald-400">All done for today! Great job!</h3>
+          <p class="text-xs text-emerald-300/70">Stay consistent and keep pushing forward.</p>
+        </div>
+      </div>
+
+      <!-- Quick Today Tasks Feed -->
       <div class="space-y-3">
-        <label class="block text-xs text-slate-400">How are you managing your emotions today?</label>
-        <select id="moodSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500">
-          <option value="Calm & In Control">🧘 Calm & In Control</option>
-          <option value="Focused & Driven">⚡ Focused & Driven</option>
-          <option value="Anxious / Stressed">🌧️ Anxious / Stressed</option>
-          <option value="Impulsive / Tempted">⚠️ Impulsive / Tempted</option>
-        </select>
-        <textarea id="reflectionNote" rows="2" placeholder="Brief reflection or trigger note..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-blue-500"></textarea>
-        <button onclick="logCheckIn()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 rounded-lg text-sm transition">
+        <div class="flex justify-between items-center">
+          <span class="text-xs font-bold text-zinc-500 tracking-wider uppercase">Today's Tasks</span>
+          <button onclick="switchTab('tasks')" class="text-xs text-accentBlue font-medium">+ Manage Tasks</button>
+        </div>
+        <div id="todayTaskList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MIND & MOOD LOG -->
+    <section id="tab-mood" class="hidden space-y-5">
+      <div>
+        <h2 class="text-xl font-bold text-white">Mind & Self-Control</h2>
+        <p class="text-xs text-zinc-500 font-medium tracking-wider uppercase">Emotional Check-In & Journal</p>
+      </div>
+
+      <div class="bg-cardBg p-5 rounded-2xl border border-cardBorder space-y-4">
+        <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider">How are you feeling today?</label>
+        
+        <div class="grid grid-cols-2 gap-2" id="moodOptionGrid">
+          <button onclick="selectMood('🧘 Calm & In Control')" class="mood-btn p-3 rounded-xl bg-[#1c1c1e] border border-zinc-800 text-left text-xs font-medium text-zinc-300 hover:border-indigo-500 transition">
+            🧘 Calm & In Control
+          </button>
+          <button onclick="selectMood('⚡ Focused & Driven')" class="mood-btn p-3 rounded-xl bg-[#1c1c1e] border border-zinc-800 text-left text-xs font-medium text-zinc-300 hover:border-indigo-500 transition">
+            ⚡ Focused & Driven
+          </button>
+          <button onclick="selectMood('🌧️ Anxious / Stressed')" class="mood-btn p-3 rounded-xl bg-[#1c1c1e] border border-zinc-800 text-left text-xs font-medium text-zinc-300 hover:border-indigo-500 transition">
+            🌧️ Anxious / Stressed
+          </button>
+          <button onclick="selectMood('⚠️ Impulsive / Tempted')" class="mood-btn p-3 rounded-xl bg-[#1c1c1e] border border-zinc-800 text-left text-xs font-medium text-zinc-300 hover:border-indigo-500 transition">
+            ⚠️ Impulsive / Tempted
+          </button>
+        </div>
+
+        <textarea id="reflectionNote" rows="3" placeholder="Write down any triggers or thoughts..." class="w-full bg-[#1c1c1e] border border-cardBorder rounded-xl p-3 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500"></textarea>
+
+        <button onclick="logCheckIn()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition shadow-lg">
           Log Entry & Claim Daily Streak
         </button>
       </div>
-    </section>
 
-    <!-- Section 2: To-Do List -->
-    <section class="bg-cardbg p-5 rounded-2xl border border-slate-700/60 shadow">
-      <h2 class="text-lg font-semibold mb-3 text-emerald-400">📋 Daily Priorities</h2>
-      <div class="flex gap-2 mb-3">
-        <input type="text" id="taskInput" placeholder="Add new task..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500" />
-        <button onclick="addTask()" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg font-bold text-sm text-white">+</button>
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-zinc-500 tracking-wider uppercase">Recent Logs</span>
+        <div id="moodLogHistory" class="space-y-2"></div>
       </div>
-      <ul id="taskList" class="space-y-2 max-h-48 overflow-y-auto"></ul>
     </section>
 
-    <!-- Section 3: Gym & Macro Calculator -->
-    <section class="bg-cardbg p-5 rounded-2xl border border-slate-700/60 shadow">
-      <h2 class="text-lg font-semibold mb-3 text-cyan-400">🏋️ Macro & Gym Calculator</h2>
-      <div class="grid grid-cols-2 gap-3 mb-3">
+    <!-- TAB 3: TASKS & HABITS -->
+    <section id="tab-tasks" class="hidden space-y-5">
+      <div class="flex justify-between items-center">
         <div>
-          <label class="block text-xs text-slate-400 mb-1">Weight (kg)</label>
-          <input type="number" id="weightInput" placeholder="70" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-200" />
+          <h2 class="text-xl font-bold text-white">Tasks & Habits</h2>
+          <p class="text-xs text-zinc-500 font-medium tracking-wider uppercase">To-Do List</p>
         </div>
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">Goal</label>
-          <select id="fitnessGoal" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-200">
-            <option value="cut">Fat Loss (Cut)</option>
-            <option value="maintain">Maintain</option>
-            <option value="bulk">Muscle Gain (Bulk)</option>
+      </div>
+
+      <div class="bg-cardBg p-4 rounded-2xl border border-cardBorder space-y-3">
+        <div class="flex gap-2">
+          <input type="text" id="taskInput" placeholder="Add task name..." class="flex-1 bg-[#1c1c1e] border border-cardBorder rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500" />
+          <select id="taskTag" class="bg-[#1c1c1e] border border-cardBorder rounded-xl px-2 text-xs text-zinc-300">
+            <option value="Study">Study</option>
+            <option value="Gym">Gym</option>
+            <option value="Lesson">Lesson</option>
+            <option value="General">General</option>
           </select>
         </div>
+        <button onclick="addTask()" class="w-full bg-emerald-600 hover:bg-emerald-500 font-bold py-2.5 rounded-xl text-xs text-white tracking-wider uppercase transition">
+          + Add Task
+        </button>
       </div>
-      <button onclick="calculateMacros()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-lg text-sm transition mb-4">
-        Calculate Targets
-      </button>
 
-      <div id="macroResults" class="hidden grid grid-cols-3 gap-2 text-center">
-        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Calories</p>
-          <p id="calResult" class="text-base font-bold text-amber-400">0</p>
+      <div class="space-y-2">
+        <span class="text-xs font-bold text-zinc-500 tracking-wider uppercase">Active Tasks</span>
+        <div id="fullTaskList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- TAB 4: GYM & MACROS -->
+    <section id="tab-macros" class="hidden space-y-5">
+      <div>
+        <h2 class="text-xl font-bold text-white">Gym & Macro Calculator</h2>
+        <p class="text-xs text-zinc-500 font-medium tracking-wider uppercase">Nutrition Targets</p>
+      </div>
+
+      <div class="bg-cardBg p-5 rounded-2xl border border-cardBorder space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Body Weight (kg)</label>
+            <input type="number" id="weightInput" placeholder="70" class="w-full bg-[#1c1c1e] border border-cardBorder rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-cyan-500" />
+          </div>
+          <div>
+            <label class="block text-xs text-zinc-400 mb-1">Fitness Goal</label>
+            <select id="fitnessGoal" class="w-full bg-[#1c1c1e] border border-cardBorder rounded-xl p-2.5 text-xs text-zinc-300">
+              <option value="cut">Fat Loss (Cut)</option>
+              <option value="maintain">Maintain Weight</option>
+              <option value="bulk">Muscle Gain (Bulk)</option>
+            </select>
+          </div>
         </div>
-        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Protein</p>
-          <p id="proteinResult" class="text-base font-bold text-cyan-400">0g</p>
+
+        <button onclick="calculateMacros()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 rounded-xl text-xs tracking-wider uppercase transition">
+          Calculate Daily Targets
+        </button>
+      </div>
+
+      <div id="macroResults" class="hidden grid grid-cols-3 gap-3">
+        <div class="bg-cardBg p-4 rounded-2xl border border-cardBorder text-center">
+          <p class="text-[10px] text-zinc-500 font-bold tracking-wider uppercase">Calories</p>
+          <p id="calResult" class="text-xl font-black text-amber-400 mt-1">0</p>
         </div>
-        <div class="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
-          <p class="text-xs text-slate-400">Carbs</p>
-          <p id="carbResult" class="text-base font-bold text-emerald-400">0g</p>
+        <div class="bg-cardBg p-4 rounded-2xl border border-cardBorder text-center">
+          <p class="text-[10px] text-zinc-500 font-bold tracking-wider uppercase">Protein</p>
+          <p id="proteinResult" class="text-xl font-black text-cyan-400 mt-1">0g</p>
+        </div>
+        <div class="bg-cardBg p-4 rounded-2xl border border-cardBorder text-center">
+          <p class="text-[10px] text-zinc-500 font-bold tracking-wider uppercase">Carbs</p>
+          <p id="carbResult" class="text-xl font-black text-emerald-400 mt-1">0g</p>
         </div>
       </div>
     </section>
 
-    <!-- Section 4: Data Backup & Restore -->
-    <section class="bg-cardbg p-5 rounded-2xl border border-slate-700/60 shadow">
-      <h2 class="text-lg font-semibold mb-3 text-slate-300">💾 Data & Backup</h2>
-      <div class="grid grid-cols-2 gap-3">
-        <button onclick="exportData()" class="bg-slate-800 border border-slate-600 hover:bg-slate-700 text-xs font-semibold py-2.5 rounded-lg">
-          ⬇️ Export JSON
-        </button>
-        <label class="bg-slate-800 border border-slate-600 hover:bg-slate-700 text-xs font-semibold py-2.5 rounded-lg text-center cursor-pointer">
-          ⬆️ Restore JSON
-          <input type="file" id="importFile" onchange="importData(event)" class="hidden" accept=".json" />
-        </label>
+    <!-- TAB 5: SETTINGS & BACKUP -->
+    <section id="tab-settings" class="hidden space-y-5">
+      <div>
+        <h2 class="text-xl font-bold text-white">Settings & Data</h2>
+        <p class="text-xs text-zinc-500 font-medium tracking-wider uppercase">Cloud & Storage Options</p>
+      </div>
+
+      <div class="bg-cardBg p-5 rounded-2xl border border-cardBorder space-y-3">
+        <h3 class="text-xs font-bold text-zinc-300 uppercase tracking-wider">Backup & Restore Data</h3>
+        <p class="text-xs text-zinc-500">Keep your streaks and data saved securely by exporting a backup JSON file.</p>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button onclick="exportData()" class="bg-[#1c1c1e] border border-zinc-700 hover:bg-zinc-800 text-xs font-bold py-3 rounded-xl text-zinc-200">
+            ⬇️ Export Data
+          </button>
+          <label class="bg-[#1c1c1e] border border-zinc-700 hover:bg-zinc-800 text-xs font-bold py-3 rounded-xl text-zinc-200 text-center cursor-pointer block">
+            ⬆️ Restore Backup
+            <input type="file" id="importFile" onchange="importData(event)" class="hidden" accept=".json" />
+          </label>
+        </div>
       </div>
     </section>
 
   </main>
 
+  <!-- iOS Bottom Floating Tab Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#000000]/90 backdrop-blur-xl border-t border-cardBorder/80 px-4 py-2 z-30">
+    <div class="max-w-md mx-auto flex justify-between items-center text-center">
+      <button onclick="switchTab('today')" id="nav-today" class="nav-btn flex-1 py-1 text-white flex flex-col items-center">
+        <span class="text-base">🗓️</span>
+        <span class="text-[10px] font-semibold mt-0.5">Schedule</span>
+      </button>
+      <button onclick="switchTab('mood')" id="nav-mood" class="nav-btn flex-1 py-1 text-zinc-500 flex flex-col items-center">
+        <span class="text-base">🧠</span>
+        <span class="text-[10px] font-semibold mt-0.5">Mind</span>
+      </button>
+      <button onclick="switchTab('tasks')" id="nav-tasks" class="nav-btn flex-1 py-1 text-zinc-500 flex flex-col items-center">
+        <span class="text-base">✅</span>
+        <span class="text-[10px] font-semibold mt-0.5">Tasks</span>
+      </button>
+      <button onclick="switchTab('macros')" id="nav-macros" class="nav-btn flex-1 py-1 text-zinc-500 flex flex-col items-center">
+        <span class="text-base">🏋️</span>
+        <span class="text-[10px] font-semibold mt-0.5">Macros</span>
+      </button>
+      <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn flex-1 py-1 text-zinc-500 flex flex-col items-center">
+        <span class="text-base">⚙️</span>
+        <span class="text-[10px] font-semibold mt-0.5">Settings</span>
+      </button>
+    </div>
+  </nav>
+
   <script>
-    // State initialization
-    let state = JSON.parse(localStorage.getItem('controlHubData')) || {
+    // App State Management
+    let selectedMoodValue = "🧘 Calm & In Control";
+    let state = JSON.parse(localStorage.getItem('controlHubData_v2')) || {
       streak: 0,
       lastLogDate: null,
       tasks: [],
@@ -131,14 +267,66 @@
     };
 
     function saveState() {
-      localStorage.setItem('controlHubData', JSON.stringify(state));
+      localStorage.setItem('controlHubData_v2', JSON.stringify(state));
       render();
     }
 
-    // Streak and Mood Logging
+    // Tab Navigation Switcher
+    function switchTab(tabId) {
+      ['today', 'mood', 'tasks', 'macros', 'settings'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.add('hidden');
+        const navBtn = document.getElementById(`nav-${t}`);
+        navBtn.classList.remove('text-white');
+        navBtn.classList.add('text-zinc-500');
+      });
+
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`nav-${tabId}`);
+      activeBtn.classList.remove('text-zinc-500');
+      activeBtn.classList.add('text-white');
+    }
+
+    // Date Carousel Renderer
+    function initDateStrip() {
+      const dateStrip = document.getElementById('dateStrip');
+      const now = new Date();
+      document.getElementById('currentDateSub').innerText = now.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+
+      dateStrip.innerHTML = '';
+      for (let i = -2; i <= 4; i++) {
+        const d = new Date();
+        d.setDate(now.getDate() + i);
+        const isToday = i === 0;
+
+        const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
+        const dayNum = d.getDate();
+        const monthName = d.toLocaleDateString('en-US', { month: 'short' });
+
+        const dateCard = document.createElement('div');
+        dateCard.className = `flex-shrink-0 w-16 py-2.5 rounded-2xl text-center border cursor-pointer transition ${
+          isToday 
+            ? 'bg-white text-black border-white font-bold shadow-lg scale-105' 
+            : 'bg-[#121214] text-zinc-400 border-cardBorder hover:bg-zinc-800'
+        }`;
+        
+        dateCard.innerHTML = `
+          <p class="text-[10px] font-semibold uppercase tracking-wider">${dayName}</p>
+          <p class="text-base font-black my-0.5">${dayNum}</p>
+          <p class="text-[9px] uppercase tracking-wider">${monthName}</p>
+        `;
+        dateStrip.appendChild(dateCard);
+      }
+    }
+
+    // Mood Log Functions
+    function selectMood(moodText) {
+      selectedMoodValue = moodText;
+      document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('border-indigo-500', 'bg-indigo-950/30'));
+      event.currentTarget.classList.add('border-indigo-500', 'bg-indigo-950/30');
+    }
+
     function logCheckIn() {
       const today = new Date().toISOString().split('T')[0];
-      const mood = document.getElementById('moodSelect').value;
       const note = document.getElementById('reflectionNote').value;
 
       if (state.lastLogDate !== today) {
@@ -151,17 +339,19 @@
         state.lastLogDate = today;
       }
 
-      state.logs.push({ date: today, mood, note });
+      state.logs.unshift({ date: today, mood: selectedMoodValue, note });
       document.getElementById('reflectionNote').value = '';
       saveState();
-      alert('Entry saved and streak updated!');
+      alert('Entry saved & daily streak claimed!');
     }
 
-    // To-Do List Functions
+    // Task Functions
     function addTask() {
       const input = document.getElementById('taskInput');
+      const tag = document.getElementById('taskTag').value;
       if (!input.value.trim()) return;
-      state.tasks.push({ text: input.value.trim(), done: false });
+      
+      state.tasks.push({ text: input.value.trim(), tag: tag, done: false });
       input.value = '';
       saveState();
     }
@@ -182,8 +372,8 @@
       const goal = document.getElementById('fitnessGoal').value;
       if (!weight || weight <= 0) return alert('Please enter a valid weight.');
 
-      let protein = weight * 2.0; // 2g per kg
-      let calories = weight * 32;  // Baseline multiplier
+      let protein = weight * 2.0;
+      let calories = weight * 32;
 
       if (goal === 'cut') calories -= 400;
       if (goal === 'bulk') calories += 350;
@@ -197,7 +387,7 @@
       document.getElementById('macroResults').classList.remove('hidden');
     }
 
-    // Export & Import
+    // Backup & Restore
     function exportData() {
       const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
@@ -220,25 +410,56 @@
       if (e.target.files[0]) reader.readAsText(e.target.files[0]);
     }
 
-    // Render Function
+    // Render UI Elements
     function render() {
       document.getElementById('streakCount').innerText = `${state.streak} Days`;
-      const taskList = document.getElementById('taskList');
-      taskList.innerHTML = state.tasks.map((task, i) => `
-        <li class="flex justify-between items-center bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-sm">
-          <span onclick="toggleTask(${i})" class="cursor-pointer flex-1 ${task.done ? 'line-through text-slate-500' : 'text-slate-200'}">
-            ${task.done ? '✅' : '⚪'} ${task.text}
-          </span>
-          <button onclick="deleteTask(${i})" class="text-xs text-red-400 hover:text-red-300 ml-2">✕</button>
-        </li>
+
+      // Render Task Items (Matching Image 3 Style)
+      const renderTaskItem = (task, i) => `
+        <div class="bg-cardBg p-3.5 rounded-2xl border border-cardBorder flex justify-between items-center transition ${task.done ? 'opacity-50' : ''}">
+          <div class="flex items-center space-x-3 flex-1" onclick="toggleTask(${i})">
+            <div class="w-6 h-6 rounded-full border border-zinc-700 flex items-center justify-center ${task.done ? 'bg-emerald-500 border-emerald-500' : ''}">
+              ${task.done ? '✓' : ''}
+            </div>
+            <div>
+              <p class="text-xs font-bold text-white ${task.done ? 'line-through text-zinc-500' : ''}">${task.text}</p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="bg-[#2c2c2e] text-zinc-300 text-[9px] font-semibold px-2 py-0.5 rounded-md">${task.tag}</span>
+                <span class="text-[9px] text-zinc-500 font-medium tracking-wider">• CONTROL HUB</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="deleteTask(${i})" class="text-zinc-600 hover:text-red-400 p-2 text-xs">🗑️</button>
+        </div>
+      `;
+
+      // Update Lists
+      const taskListHTML = state.tasks.map((task, i) => renderTaskItem(task, i)).join('');
+      document.getElementById('fullTaskList').innerHTML = taskListHTML || `<p class="text-xs text-zinc-600 italic">No active tasks.</p>`;
+      document.getElementById('todayTaskList').innerHTML = taskListHTML || `<p class="text-xs text-zinc-600 italic">No tasks set for today.</p>`;
+
+      // Completion Banner state
+      const allDone = state.tasks.length > 0 && state.tasks.every(t => t.done);
+      if (allDone) {
+        document.getElementById('completionCard').classList.remove('hidden');
+      } else {
+        document.getElementById('completionCard').classList.add('hidden');
+      }
+
+      // Render Mood Logs
+      document.getElementById('moodLogHistory').innerHTML = state.logs.map(log => `
+        <div class="bg-cardBg p-3 rounded-xl border border-cardBorder text-xs space-y-1">
+          <div class="flex justify-between text-zinc-400 font-bold">
+            <span>${log.mood}</span>
+            <span class="text-[10px] text-zinc-500">${log.date}</span>
+          </div>
+          ${log.note ? `<p class="text-zinc-300 italic text-[11px] font-normal">"${log.note}"</p>` : ''}
+        </div>
       `).join('');
     }
 
-    // Register Service Worker for PWA installation
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(console.error);
-    }
-
+    // Initialize App
+    initDateStrip();
     render();
   </script>
 </body>
