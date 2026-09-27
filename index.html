@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Control Hub</title>
   
-  <!-- iOS Native App PWA Meta Tags -->
+  <!-- Full iOS & Android Native Standalone Web App Tags -->
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-touch-fullscreen" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Control Hub" />
   <meta name="theme-color" content="#000000" />
+  
   <link rel="manifest" href="manifest.json" />
   <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" />
 
@@ -34,16 +37,33 @@
   </script>
 
   <style>
-    /* Hide scrollbars for seamless native app feel */
+    /* iOS Safe Area & Native Feel Fixes */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    body { -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+      -webkit-tap-highlight-color: transparent; 
+      -webkit-user-select: none;
+      user-select: none;
+      background-color: #000000;
+    }
+
+    /* Support iOS Safe Areas for Notch / Dynamic Island & Home Bar */
+    header {
+      padding-top: max(3rem, env(safe-area-inset-top));
+    }
+    nav {
+      padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+    }
+    main {
+      padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    }
   </style>
 </head>
-<body class="bg-appBg text-white min-h-screen font-sans antialiased pb-28 select-none">
+<body class="bg-appBg text-white min-h-screen font-sans antialiased select-none">
 
   <!-- Header -->
-  <header class="pt-12 px-5 pb-3 bg-black border-b border-cardBorder/50 flex justify-between items-center sticky top-0 z-20 backdrop-blur-md bg-black/80">
+  <header class="px-5 pb-3 bg-black border-b border-cardBorder/50 flex justify-between items-center sticky top-0 z-20 backdrop-blur-md bg-black/80">
     <div>
       <h1 class="text-3xl font-black tracking-tight text-white">Control Hub</h1>
       <p id="currentDateSub" class="text-xs font-medium text-zinc-400 mt-0.5">Loading date...</p>
@@ -231,7 +251,7 @@
   </main>
 
   <!-- iOS Bottom Floating Tab Bar -->
-  <nav class="fixed bottom-0 left-0 right-0 bg-[#000000]/90 backdrop-blur-xl border-t border-cardBorder/80 px-4 py-2 z-30">
+  <nav class="fixed bottom-0 left-0 right-0 bg-[#000000]/90 backdrop-blur-xl border-t border-cardBorder/80 px-4 pt-2 z-30">
     <div class="max-w-md mx-auto flex justify-between items-center text-center">
       <button onclick="switchTab('today')" id="nav-today" class="nav-btn flex-1 py-1 text-white flex flex-col items-center">
         <span class="text-base">🗓️</span>
@@ -257,6 +277,13 @@
   </nav>
 
   <script>
+    // Register Service Worker for Standalone App Support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(err => console.log('ServiceWorker error: ', err));
+      });
+    }
+
     // App State Management
     let selectedMoodValue = "🧘 Calm & In Control";
     let state = JSON.parse(localStorage.getItem('controlHubData_v2')) || {
@@ -414,7 +441,7 @@
     function render() {
       document.getElementById('streakCount').innerText = `${state.streak} Days`;
 
-      // Render Task Items (Matching Image 3 Style)
+      // Render Task Items
       const renderTaskItem = (task, i) => `
         <div class="bg-cardBg p-3.5 rounded-2xl border border-cardBorder flex justify-between items-center transition ${task.done ? 'opacity-50' : ''}">
           <div class="flex items-center space-x-3 flex-1" onclick="toggleTask(${i})">
